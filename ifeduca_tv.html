@@ -109,6 +109,11 @@
   .stat:first-child{border-top:0}
   .stat b{font-weight:900;font-size:168px;line-height:.9;letter-spacing:-.04em;min-width:216px}
   .stat span{font-weight:800;font-size:31px;line-height:1.15;text-transform:uppercase}
+  .stat[hidden]{display:none}
+  /* com "itens produzidos" são quatro indicadores: fonte e respiro menores para caber */
+  .stats.four .stat{padding:20px 0 24px;gap:24px}
+  .stats.four .stat b{font-size:128px;min-width:236px}
+  .stats.four .stat b.xl{font-size:98px}
 
   /* 2 — serviços */
   .rows{position:absolute;left:72px;right:72px;top:318px}
@@ -207,7 +212,8 @@
     <h1 data-in>O que já passou<br>pela nossa bancada</h1>
     <div class="hero-n" data-count="total" data-in style="--i:1"></div>
     <div class="hero-l" data-in style="--i:2">pedidos recebidos<small>Impressão 3D, corte a laser e prototipação</small></div>
-    <div class="stats">
+    <div class="stats" id="stats">
+      <div class="stat" id="stat-itens" data-in style="--i:2" hidden><b data-count="itens">0</b><span>itens<br>produzidos</span></div>
       <div class="stat" data-in style="--i:2"><b data-count="finalizados">0</b><span>pedidos<br>finalizados</span></div>
       <div class="stat" data-in style="--i:3"><b data-count="andamento">0</b><span>em<br>andamento</span></div>
       <div class="stat" data-in style="--i:4"><b data-count="recebidos">0</b><span>aguardando<br>triagem</span></div>
@@ -324,8 +330,10 @@ function extract(g){
   let updated = "";
   g.forEach(r => r.forEach(c => { const m = String(c).match(/Atualizado automaticamente em:\s*(.+)/i); if (m) updated = m[1].trim(); }));
   const status = {}; table("STATUS").forEach(([k, v]) => status[k] = v);
+  // opcional: se o bloco PRODUÇÃO não existir na planilha, o indicador fica oculto e o resto segue igual
+  const right = label => { const p = find(label); return p && String(g[p[0]][p[1]+1] || "").trim() ? num(g[p[0]][p[1]+1]) : null; };
   return { updated,
-    kpi: { total: below("TOTAL DE PEDIDOS"), andamento: below("EM ANDAMENTO"), finalizados: below("FINALIZADOS"), recebidos: below("RECEBIDOS") },
+    kpi: { total: below("TOTAL DE PEDIDOS"), andamento: below("EM ANDAMENTO"), finalizados: below("FINALIZADOS"), recebidos: below("RECEBIDOS"), itens: right("ITENS PRODUZIDOS") },
     status, servicos: table("SERVIÇO") };
 }
 async function load(){
@@ -361,6 +369,11 @@ function build(){
       <text class="sub" x="${cx}" y="${cy + 262}" text-anchor="middle">${l1}</text><text class="sub" x="${cx}" y="${cy + 290}" text-anchor="middle">${l2}</text>`;
   });
   $("pipe").innerHTML = s;
+
+  const itens = d.kpi.itens;
+  $("stat-itens").hidden = !(itens > 0);
+  $("stats").classList.toggle("four", itens > 0);
+  $("stat-itens").firstElementChild.classList.toggle("xl", itens >= 1000);
 
   $("led").className = "led" + (STATE === "live" ? " on" : STATE === "off" ? " off" : "");
   $("src").textContent = STATE === "live" ? "Dados ao vivo · atualizado em " + (d.updated || "—")
@@ -424,7 +437,8 @@ function enter(animate = true){
   const sl = slides[idx];
   slides.forEach((s, i) => { s.classList.toggle("on", i === idx); s.classList.remove("go"); });
   stage.dataset.foot = sl.dataset.foot || "";
-  sl.querySelectorAll("[data-count]").forEach(el => animate ? countUp(el, DATA.kpi[el.dataset.count]) : (el.classList.contains("hero-n") ? el.innerHTML = String(DATA.kpi[el.dataset.count]).split("").map(c => `<span>${c}</span>`).join("") : el.textContent = DATA.kpi[el.dataset.count]));
+  const kv = el => DATA.kpi[el.dataset.count] ?? 0;
+  sl.querySelectorAll("[data-count]").forEach(el => animate ? countUp(el, kv(el)) : (el.classList.contains("hero-n") ? el.innerHTML = String(kv(el)).split("").map(c => `<span>${c}</span>`).join("") : el.textContent = kv(el)));
   sl.querySelectorAll("[data-num]").forEach(el => animate ? countImp(el) : paintImp(el, +el.dataset.num));
   const bars = [...sl.querySelectorAll(".bar")], max = Math.max(1, ...bars.map(b => +b.dataset.v));
   bars.forEach(b => b.style.width = animate ? "0" : (b.dataset.v / max * 1440) + "px");
