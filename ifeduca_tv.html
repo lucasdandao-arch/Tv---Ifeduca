@@ -84,18 +84,18 @@
 
   /* B — premiações */
   .sB h1{color:#fff;top:216px;font-size:58px}
-  .tl{position:absolute;left:72px;right:72px;top:338px;display:grid;grid-template-columns:repeat(4,1fr);column-gap:40px;color:#fff}
-  .tl .yr{font-weight:900;font-size:112px;line-height:.86;letter-spacing:-.04em}
-  .tl .rail{position:relative;height:6px;background:var(--green);margin:30px -40px 40px 0}
+  .tl{position:absolute;left:72px;right:72px;top:322px;display:grid;grid-template-columns:repeat(5,1fr);column-gap:32px;color:#fff}
+  .tl .yr{font-weight:900;font-size:100px;line-height:.86;letter-spacing:-.04em}
+  .tl .rail{position:relative;height:6px;background:var(--green);margin:26px -32px 34px 0}
   .tl .rail::before{content:"";position:absolute;left:0;top:-11px;width:28px;height:28px;border-radius:50%;background:#fff}
   .tl .col:last-child .rail{margin-right:0;background:linear-gradient(90deg,var(--green) 55%,transparent)}
-  .tl .evs{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));column-gap:28px}
-  .tl .ev{margin-bottom:30px}
-  .tl .kick{font-weight:800;font-size:18px;letter-spacing:.12em;text-transform:uppercase;opacity:.72;margin-bottom:4px}
-  .tl h3{font-weight:900;font-size:28px;line-height:1.05;text-transform:uppercase}
-  .tl .md{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}
-  .tl .md span{width:64px;height:64px;border-radius:50%;background:#fff;color:var(--green-deep);display:grid;place-items:center;font-weight:900;font-size:26px}
-  .tl .md svg{width:32px;height:32px;fill:var(--red-hot)}
+  .tl .ev{margin-bottom:22px}
+  .tl .kick{font-weight:800;font-size:16px;letter-spacing:.12em;text-transform:uppercase;opacity:.72;margin-bottom:4px}
+  .tl h3{font-weight:900;font-size:26px;line-height:1.04;text-transform:uppercase}
+  .tl .md{display:flex;flex-wrap:wrap;gap:9px;margin-top:12px}
+  .tl .md span{width:56px;height:56px;border-radius:50%;background:#fff;color:var(--green-deep);display:grid;place-items:center;font-weight:900;font-size:23px}
+  .tl .md svg{width:28px;height:28px;fill:var(--red-hot)}
+  .tl.dense .yr{font-size:84px} .tl.dense h3{font-size:22px} .tl.dense .md span{width:46px;height:46px;font-size:19px} .tl.dense .ev{margin-bottom:16px}
 
   /* 1 — números */
   .panel{position:absolute;inset:0;background:var(--green-deep);clip-path:polygon(897px 0,100% 0,100% 100%,1290px 100%)}
@@ -427,11 +427,13 @@ function buildFixed(){
     if (!gr){ gr = { key, ev, cat, ms: [] }; groups[ano].push(gr); }
     gr.ms.push(/^\d+º$/.test(col) ? col : "*");
   });
-  const years = Object.keys(groups).map(Number).sort((a, b) => a - b), shown = years.slice(-4);
+  // até 5 anos lado a lado, cada ano numa coluna própria (eventos empilhados, sem subcolunas)
+  const years = Object.keys(groups).map(Number).sort((a, b) => a - b), shown = years.slice(-5);
   const total = PREMIOS.filter(r => r[0]).length;
   $("premios-t").textContent = years.length ? `${total} premiações desde ${years[0]}` : "Premiações";
-  $("premios").style.gridTemplateColumns = shown.map(y => Math.max(1, Math.ceil(groups[y].length / 2)) + "fr").join(" ");
-  $("premios").innerHTML = shown.map((ano, i) => `<div class="col" data-in style="--i:${i + 1}"><div class="yr">${ano}</div><div class="rail"></div><div class="evs">`
+  $("premios").style.gridTemplateColumns = `repeat(${Math.max(shown.length, 4)}, 1fr)`;
+  $("premios").classList.toggle("dense", Math.max(0, ...shown.map(y => groups[y].length)) > 3);
+  $("premios").innerHTML = shown.map((ano, i) => `<div class="col" data-in style="--i:${i + 1}"><div class="yr">${ano}</div><div class="rail"></div><div>`
     + groups[ano].map(gr => `<div class="ev"><div class="kick">${gr.cat ? gr.ev : "&nbsp;"}</div><h3>${gr.cat || gr.ev}</h3><div class="md">`
       + gr.ms.sort().map(m => `<span>${m === "*" ? STAR : m}</span>`).join("") + `</div></div>`).join("") + `</div></div>`).join("");
 }
