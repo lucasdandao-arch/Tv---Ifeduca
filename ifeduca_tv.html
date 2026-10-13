@@ -84,18 +84,21 @@
 
   /* B — premiações */
   .sB h1{color:#fff;top:216px;font-size:58px}
-  .tl{position:absolute;left:72px;right:72px;top:322px;display:grid;grid-template-columns:repeat(5,1fr);column-gap:32px;color:#fff}
-  .tl .yr{font-weight:900;font-size:100px;line-height:.86;letter-spacing:-.04em}
-  .tl .rail{position:relative;height:6px;background:var(--green);margin:26px -32px 34px 0}
-  .tl .rail::before{content:"";position:absolute;left:0;top:-11px;width:28px;height:28px;border-radius:50%;background:#fff}
-  .tl .col:last-child .rail{margin-right:0;background:linear-gradient(90deg,var(--green) 55%,transparent)}
-  .tl .ev{margin-bottom:22px}
-  .tl .kick{font-weight:800;font-size:16px;letter-spacing:.12em;text-transform:uppercase;opacity:.72;margin-bottom:4px}
-  .tl h3{font-weight:900;font-size:26px;line-height:1.04;text-transform:uppercase}
-  .tl .md{display:flex;flex-wrap:wrap;gap:9px;margin-top:12px}
-  .tl .md span{width:56px;height:56px;border-radius:50%;background:#fff;color:var(--green-deep);display:grid;place-items:center;font-weight:900;font-size:23px}
-  .tl .md svg{width:28px;height:28px;fill:var(--red-hot)}
-  .tl.dense .yr{font-size:84px} .tl.dense h3{font-size:22px} .tl.dense .md span{width:46px;height:46px;font-size:19px} .tl.dense .ev{margin-bottom:16px}
+  .tl{position:absolute;left:72px;right:72px;top:300px;display:flex;flex-direction:column;gap:14px;color:#fff}
+  .trow{display:flex;align-items:center;height:112px;background:rgba(255,255,255,.07)}
+  .trow .yr{flex:0 0 250px;align-self:stretch;display:flex;align-items:center;padding-left:34px;background:var(--green);font-weight:900;font-size:66px;letter-spacing:-.03em;clip-path:polygon(0 0,calc(100% - 41px) 0,100% 100%,0 100%)}
+  .trow:first-child{background:rgba(255,255,255,.12)}
+  .trow:first-child .yr{background:var(--red-hot)}
+  .trow .evs{flex:1;display:flex;align-items:center;min-width:0;padding-left:34px;overflow:hidden}
+  .trow .ev{display:flex;align-items:center;gap:18px;padding:0 34px;border-left:2px solid rgba(255,255,255,.2);flex:0 0 auto}
+  .trow .ev:first-child{border-left:0;padding-left:0}
+  .trow .kick{font-weight:800;font-size:15px;letter-spacing:.12em;text-transform:uppercase;opacity:.72;margin-bottom:3px}
+  .trow h3{font-weight:900;font-size:24px;line-height:1.05;text-transform:uppercase;white-space:nowrap}
+  .trow .md{display:flex;gap:8px}
+  .trow .md span{width:52px;height:52px;border-radius:50%;background:#fff;color:var(--green-deep);display:grid;place-items:center;font-weight:900;font-size:21px}
+  .trow .md svg{width:26px;height:26px;fill:var(--red-hot)}
+  .trow .cnt{flex:0 0 auto;padding:0 30px 0 12px;font-weight:800;font-size:17px;letter-spacing:.12em;text-transform:uppercase;opacity:.75;white-space:nowrap}
+  .trow.tight .ev{padding:0 22px;gap:12px} .trow.tight h3{font-size:19px} .trow.tight .md span{width:42px;height:42px;font-size:17px} .trow.tight .md svg{width:21px;height:21px}
 
   /* 1 — números */
   .panel{position:absolute;inset:0;background:var(--green-deep);clip-path:polygon(897px 0,100% 0,100% 100%,1290px 100%)}
@@ -290,7 +293,8 @@ let PREMIOS = [
   [2023, "CNPA", "", "1º"],
   [2024, "JINCE", "PIBIT", "1º"], [2024, "JINCE", "PIBIT", "2º"], [2024, "JINCE", "PIBIT", "3º"], [2024, "UvaTec", "", "Premiado"],
   [2025, "UvaTec", "", "Premiado"], [2025, "JINCE", "Extensão", "1º"], [2025, "JINCE", "Extensão", "2º"], [2025, "JINCE", "Extensão", "3º"],
-  [2025, "JINCE", "Pesquisa", "1º"], [2025, "JINCE", "Pesquisa", "2º"], [2025, "JINCE", "Batalha de Startups", "2º"]
+  [2026, "JINCE", "Extensão", "1º"], [2026, "JINCE", "Extensão", "2º"], [2026, "JINCE", "Extensão", "3º"],
+  [2026, "JINCE", "Pesquisa", "1º"], [2026, "JINCE", "Pesquisa", "2º"], [2026, "JINCE", "Batalha de Startups", "2º"]
 ];
 // [valor, prefixo, rótulo] — o 1º vira o destaque, os 2 seguintes a linha do meio, o resto a linha de baixo.
 let IMPACTO = [
@@ -427,15 +431,18 @@ function buildFixed(){
     if (!gr){ gr = { key, ev, cat, ms: [] }; groups[ano].push(gr); }
     gr.ms.push(/^\d+º$/.test(col) ? col : "*");
   });
-  // até 5 anos lado a lado, cada ano numa coluna própria (eventos empilhados, sem subcolunas)
-  const years = Object.keys(groups).map(Number).sort((a, b) => a - b), shown = years.slice(-5);
+  // uma faixa por ano, do mais recente para o mais antigo (até 5 anos)
+  const years = Object.keys(groups).map(Number).sort((a, b) => a - b), shown = years.slice(-5).reverse();
   const total = PREMIOS.filter(r => r[0]).length;
   $("premios-t").textContent = years.length ? `${total} premiações desde ${years[0]}` : "Premiações";
-  $("premios").style.gridTemplateColumns = `repeat(${Math.max(shown.length, 4)}, 1fr)`;
-  $("premios").classList.toggle("dense", Math.max(0, ...shown.map(y => groups[y].length)) > 3);
-  $("premios").innerHTML = shown.map((ano, i) => `<div class="col" data-in style="--i:${i + 1}"><div class="yr">${ano}</div><div class="rail"></div><div>`
-    + groups[ano].map(gr => `<div class="ev"><div class="kick">${gr.cat ? gr.ev : "&nbsp;"}</div><h3>${gr.cat || gr.ev}</h3><div class="md">`
-      + gr.ms.sort().map(m => `<span>${m === "*" ? STAR : m}</span>`).join("") + `</div></div>`).join("") + `</div></div>`).join("");
+  $("premios").innerHTML = shown.map((ano, i) => {
+    const n = groups[ano].reduce((t, gr) => t + gr.ms.length, 0);
+    return `<div class="trow" data-in style="--i:${i + 1}"><div class="yr">${ano}</div><div class="evs">`
+      + groups[ano].map(gr => `<div class="ev"><div><div class="kick">${gr.cat ? gr.ev : "&nbsp;"}</div><h3>${gr.cat || gr.ev}</h3></div><div class="md">`
+        + gr.ms.sort().map(m => `<span>${m === "*" ? STAR : m}</span>`).join("") + `</div></div>`).join("")
+      + `</div><div class="cnt">${n} ${n === 1 ? "prêmio" : "prêmios"}</div></div>`;
+  }).join("");
+  $("premios").querySelectorAll(".evs").forEach(e => { if (e.scrollWidth > e.clientWidth) e.parentNode.classList.add("tight"); });
 }
 let LAST_PROJ = "";
 function applyProjeto(p){
